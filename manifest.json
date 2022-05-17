@@ -3,7 +3,7 @@
     "manifest_version": 3,
     "name": "Better Hulu PiP",
     "description": "Enable picture-in-picture w/ controls for Hulu videos.",
-    "version": "0.0.0.1",
+    "version": "0.0.0.2",
     "content_scripts":[{
         "matches":[
             "https://www.hulu.com/watch/*"
