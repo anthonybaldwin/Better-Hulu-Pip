@@ -2,7 +2,7 @@
 "update_url": "https://clients2.google.com/service/update2/crx",
     "manifest_version": 3,
     "name": "Better Hulu PiP",
-    "description": "Enable picture-in-picture w/ play/pause and seek controls for Hulu videos.",
+    "description": "Enable picture-in-picture w/ controls for Hulu videos.",
     "version": "0.0.0.1",
     "content_scripts":[{
         "matches":[
@@ -11,9 +11,6 @@
         "js": ["content.js"],
         "run_at": "document_start"
     }],
-    "host_permissions": [
-        "https://ajax.googleapis.com/"
-    ],
     "icons": {
            "16": "icon16.png",
            "48": "icon48.png",
