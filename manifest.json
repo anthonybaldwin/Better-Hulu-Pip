@@ -2,8 +2,8 @@
 "update_url": "https://clients2.google.com/service/update2/crx",
     "manifest_version": 3,
     "name": "Better Hulu PiP",
-    "description": "Enable picture-in-picture w/ controls for Hulu videos.",
-    "version": "0.0.0.2",
+    "description": "Enable picture-in-picture (PiP) & browser playback controls for Hulu videos.",
+    "version": "0.0.0.3",
     "content_scripts":[{
         "matches":[
             "https://www.hulu.com/watch/*"
