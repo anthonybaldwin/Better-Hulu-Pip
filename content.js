@@ -1,19 +1,34 @@
-// ❤ https://chrome.google.com/webstore/detail/hulu-pip/cjnnojbahbfmbhhpkcoihncbojdlhbnj
-var pageLoadCheck = setInterval(addPip, 1000);
+document.addEventListener("DOMContentLoaded", function(event) {
+    pip();
+});
 
-function addPip() {
+// ❤ https://greasyfork.org/en/scripts/381317-enable-pictureinpicture-hulu/code
+function pip() {
+    'use strict';
+    let observer = new MutationObserver(function(mutations) {
+        mutations.forEach((mutation) => {
+            let video = document.querySelector('#content-video-player');
+            if (document.body.contains(video)) {
+                addMediaControls();
+                video.removeAttribute('disablepictureinpicture');
+                this.disconnect;
+            }
+        });
+    });
+    observer.observe(document.querySelector('body'), {
+        attributes: true,
+        childList: true
+    });
+}
+
+// Enable desired media controls
+// https://developer.mozilla.org/en-US/docs/Web/API/MediaSession/playbackState
+function addMediaControls() {
     try {
-        // Remove the attribute disabling PiP
-        let videoPlayer = document.getElementById('content-video-player');
-        videoPlayer.removeAttribute("disablepictureinpicture");
-
         // Does Hulu disable PiP due to FCC regulation? According to bug report below, YouTube TV team can't enable [PiP] w/o subtitles.
         // If bug resolved or document PiP implemented, probably won't need this extension... Or can improve.
         // - Bug report: https://bugs.chromium.org/p/chromium/issues/detail?id=854935
         // - Document PiP Intent to Prototype: https://groups.google.com/a/chromium.org/g/blink-dev/c/jr2fQUh6xEI
-
-        // Enable desired media controls
-        // https://developer.mozilla.org/en-US/docs/Web/API/MediaSession/playbackState
         const actionHandlers = [
             // Use Hulu's buttons so video isn't out of sync w/ their player,
             // i.e., Do not use videoPlayer.pause(), don't set video.currentTime to seek or restart, etc.
@@ -71,9 +86,6 @@ function addPip() {
                 console.log(`The media session action "${action}" is not supported yet.`);
             }
         }
-
-        // Clear interval if PiP attribute removed without errors
-        clearInterval(pageLoadCheck);
 
     } catch (error) {
         console.error(error);
