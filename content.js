@@ -29,6 +29,7 @@ function addMediaControls() {
         // If bug resolved or document PiP implemented, probably won't need this extension... Or can improve.
         // - Bug report: https://bugs.chromium.org/p/chromium/issues/detail?id=854935
         // - Document PiP Intent to Prototype: https://groups.google.com/a/chromium.org/g/blink-dev/c/jr2fQUh6xEI
+
         const actionHandlers = [
             // Use Hulu's buttons so video isn't out of sync w/ their player,
             // i.e., Do not use videoPlayer.pause(), don't set video.currentTime to seek or restart, etc.
@@ -76,6 +77,9 @@ function addMediaControls() {
                     document.querySelector("div[aria-label='START OVER']").click();
                 }
             ]
+            // TODO: Watch for full page vs. in-browser PiP; Hulu toggles available buttons depending
+            //       Or find alt. way to restart/next eps. that doesn't confuse Hulu's player(s)
+            //       Change perm to cover all available PiP pages? "https://www.hulu.com/*"
         ]
 
         // Set available action handlers
