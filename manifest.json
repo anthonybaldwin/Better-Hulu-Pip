@@ -4,9 +4,15 @@
     "name": "Better Hulu PiP",
     "description": "Enable picture-in-picture (PiP) & browser playback controls for Hulu videos.",
     "version": "0.0.0.4",
+    "permissions": [
+      "tabs"
+    ],
+    "background": {
+    	"service_worker": "worker.js"
+  	},
     "content_scripts":[{
         "matches":[
-            "https://www.hulu.com/watch/*"
+            "https://www.hulu.com/*"
         ],
         "js": ["content.js"],
         "run_at": "document_idle"
