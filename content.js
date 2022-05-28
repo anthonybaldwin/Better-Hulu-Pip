@@ -1,10 +1,10 @@
-// Receive alerts that Hulu has changed to ensure PiP and proper media controls are added and STICKY
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  // setTimeout(function() {
-  //
-  // }, 1000);
-  console.log("too many changes crashes chrome? what is happening here?");
-  sendResponse({status: true});
+// Does Hulu disable PiP due to FCC regulation? According to bug report below, YouTube TV team can't enable [PiP] w/o subtitles.
+// If bug resolved or document PiP implemented, probably won't need this extension... Or can improve.
+// - Bug report: https://bugs.chromium.org/p/chromium/issues/detail?id=854935
+// - Document PiP Intent to Prototype: https://groups.google.com/a/chromium.org/g/blink-dev/c/jr2fQUh6xEI
+
+// Receive alerts that Hulu has changed to ensure PiP and proper media controls are added and STICKY.
+const getHuluMessage = async (request, sender, sendResponse) => { // async to avoid console errors.
   if (request.message === 'HuluChanged') {
       // Enable PiP and add media controls
       try {
@@ -13,19 +13,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
           let inBrowserPip = document.querySelector(".Player__container--modal");
           //let fastForwardButton = document.querySelector(".FastForwardButton");
           if (document.body.contains(video)) {
-              console.log("Video");
               if (video.getAttribute("src")) {
                   if (document.body.contains(inBrowserPip)) {
                       // Partial media controls
-                      console.log("Partial");
                       addMediaControls(minimal = true);
                   } else {
                       // Full media controls
-                      console.log("Full");
                       addMediaControls(minimal = false);
                   }
                   // Remove the PiP disabler
-                  console.log("Bye");
                   video.removeAttribute('disablepictureinpicture');
               }
           }
@@ -33,6 +29,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
           console.log(error);
       }
   }
+}
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  //avoid console errors...
+  getHuluMessage(request, sender, sendResponse);
+  setTimeout(function() {
+      sendResponse({status: true});
+  }, 1);
   return true;
 });
 
@@ -40,11 +43,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 // https://developer.mozilla.org/en-US/docs/Web/API/MediaSession
 function addMediaControls(minimal = false) {
     try {
-        // Does Hulu disable PiP due to FCC regulation? According to bug report below, YouTube TV team can't enable [PiP] w/o subtitles.
-        // If bug resolved or document PiP implemented, probably won't need this extension... Or can improve.
-        // - Bug report: https://bugs.chromium.org/p/chromium/issues/detail?id=854935
-        // - Document PiP Intent to Prototype: https://groups.google.com/a/chromium.org/g/blink-dev/c/jr2fQUh6xEI
-
         // Use Hulu's buttons so video isn't out of sync w/ their player,
         //   i.e., Do not use video.pause(), don't set video.currentTime to seek or restart, etc.
 
@@ -97,7 +95,6 @@ function addMediaControls(minimal = false) {
 
         // Set the extra media handlers if we're not watching via in-browser PiP
         if (minimal === false) {
-            console.log("Rewind, etc.");
             for (const [action, handler] of fullscreenHandlers) {
                 try {
                     navigator.mediaSession.setActionHandler(action, handler);
@@ -108,9 +105,7 @@ function addMediaControls(minimal = false) {
         }
         else
         {
-            console.log("null controls");
-            // null to hide?
-            // https://www.w3.org/TR/mediasession/#:~:text=When%20the%20update,the%20handler.
+            // null to hide
             navigator.mediaSession.setActionHandler("seekforward", null);
             navigator.mediaSession.setActionHandler("seekbackward", null);
             navigator.mediaSession.setActionHandler("nexttrack", null);
