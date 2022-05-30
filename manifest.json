@@ -12,7 +12,7 @@
   	},
     "content_scripts":[{
         "matches":[
-            "https://www.hulu.com/*"
+            "https://*.hulu.com/*"
         ],
         "js": ["content.js"],
         "run_at": "document_idle"

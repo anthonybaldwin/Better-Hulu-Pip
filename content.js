@@ -4,39 +4,115 @@
 // - Document PiP Intent to Prototype: https://groups.google.com/a/chromium.org/g/blink-dev/c/jr2fQUh6xEI
 
 // Receive alerts that Hulu has changed to ensure PiP and proper media controls are added and STICKY.
+// TODO: Can remove background.js in favor of message receiver? I don't think so because the page stays loaded,
+//       and script is not triggered again. Should test and research more though.
 const getHuluMessage = async (request, sender, sendResponse) => { // async to avoid console errors.
-  if (request.message === 'HuluChanged') {
-      // Enable PiP and add media controls
-      try {
-          // Make sure everything necessary is visible
-          let video = document.querySelector('#content-video-player');
-          let inBrowserPip = document.querySelector(".Player__container--modal");
-          //let fastForwardButton = document.querySelector(".FastForwardButton");
-          if (document.body.contains(video)) {
-              if (video.getAttribute("src")) {
-                  if (document.body.contains(inBrowserPip)) {
-                      // Partial media controls
-                      addMediaControls(minimal = true);
-                  } else {
-                      // Full media controls
-                      addMediaControls(minimal = false);
-                  }
-                  // Remove the PiP disabler
-                  video.removeAttribute('disablepictureinpicture');
-              }
-          }
-      } catch (error) {
-          console.log(error);
-      }
-  }
+    if (request.message === "HuluChanged") {
+        // Enable PiP and add media controls
+        try {
+            // Make sure everything necessary is visible
+            let videoPlayer = document.querySelector("#content-video-player"),
+                adPlayer = document.querySelector("#ad-video-player"),
+                introPlayer = document.querySelector("#intro-video-player");
+
+            let inBrowserPip = document.body.contains(document.querySelector(".Player__container--modal"));
+
+            if (document.body.contains(videoPlayer) ||
+                document.body.contains(adPlayer) ||
+                document.body.contains(introPlayer)) {
+
+                let activePip = document.pictureInPictureElement;
+
+                // TODO: Event listener?
+                // Just check for browserPip w/in addMediaControls???
+                if (inBrowserPip) {
+                    // Play/pause only
+                    addMediaControls(minimal = true);
+                } else {
+                    // Full controls
+                    addMediaControls(minimal = false);
+                }
+
+                if (videoPlayer) {
+                    videoPlayer.removeAttribute("disablepictureinpicture");
+                    videoPlayer.onplay = (event) => {
+                        if (activePip) {
+                            videoPlayer.requestPictureInPicture();
+                        }
+                    };
+                }
+
+                if (introPlayer) {
+                    introPlayer.removeAttribute("disablepictureinpicture");
+                    introPlayer.onplay = (event) => {
+                        if (activePip) {
+                            introPlayer.requestPictureInPicture();
+                        }
+                    };
+                }
+
+                if (adPlayer) {
+                    adPlayer.removeAttribute("disablepictureinpicture");
+                    adPlayer.onplay = (event) => {
+                        // Remove forward/backward seek on ads only...
+                        // TODO: Relocate to addMediaControls() in some fashion
+                        navigator.mediaSession.setActionHandler("seekforward", null);
+                        navigator.mediaSession.setActionHandler("seekbackward", null);
+                        if (activePip) {
+                            // Ad player is constantly loading in data, so possible to request PiP before video ready
+                            // (even when it's already playing... but whatever)
+                            adPlayer.onloadedmetadata = function() {
+                                adPlayer.requestPictureInPicture();
+                            };
+                        }
+                    };
+                }
+
+                // TODO: Figure this out; never triggered...
+                //       But kind of nice to leave it open so next video will start PiP.
+                // let closeButton = document.querySelector(".CloseButton");
+                // if (closeButton) {
+                //     closeButton.onClick = (event) => {
+                //         console.log("close clicked")
+                //         document.exitPictureInPicture();
+                //     }
+                // }
+
+                // TODO: Handle via listeners instead of checking for PiP element?
+                //       Doesn't work properly as-is; after a few clicks, both buttons are treated as same element
+                // let minimizeButton = document.querySelector(".PlayerButton.MinimizeButton");
+                // if (minimizeButton)
+                // {
+                //   minimizeButton.onclick = (event) => {
+                //     console.log("min click")
+                //     addMediaControls(minimal=true);
+                //   }
+                // }
+                // let maximizeButton = document.querySelector(".PlayerButton.MaximizeButton");
+                // if (maximizeButton)
+                // {
+                //   maximizeButton.onclick = (event) => {
+                //     console.log("max click")
+                //     addMediaControls(minimal=false);
+                //   }
+                // }
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
 }
+
+// TODD: Lol. Again, attempt to remove need for background.js, or clean this and background.js up + add comments.
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  //avoid console errors...
-  getHuluMessage(request, sender, sendResponse);
-  setTimeout(function() {
-      sendResponse({status: true});
-  }, 1);
-  return true;
+    //avoid console errors...
+    getHuluMessage(request, sender, sendResponse);
+    setTimeout(function() {
+        sendResponse({
+            status: true
+        });
+    }, 1);
+    return true;
 });
 
 // Enable desired media controls
@@ -44,11 +120,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 function addMediaControls(minimal = false) {
     try {
         // Use Hulu's buttons so video isn't out of sync w/ their player,
-        //   i.e., Do not use video.pause(), don't set video.currentTime to seek or restart, etc.
+        //   i.e., Do not use videoPlayer.pause(), don't set videoPlayer.currentTime to seek or restart, etc.
+
+        //TODO: Set media image and title here? The data has to be on the page...
 
         // All videos have play/pause...
         try {
-            console.log("Play/pause");
             navigator.mediaSession.setActionHandler("play", function() {
                 // Click the play button
                 document.querySelector(".PlayButton").click();
@@ -102,9 +179,7 @@ function addMediaControls(minimal = false) {
                     console.log(`The media session action "${action}" is not supported yet.`);
                 }
             }
-        }
-        else
-        {
+        } else {
             // null to hide
             navigator.mediaSession.setActionHandler("seekforward", null);
             navigator.mediaSession.setActionHandler("seekbackward", null);
